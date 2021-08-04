@@ -10,13 +10,19 @@ defmodule SupervisionTest.Application do
     children = [
       %{
         id: :child_1,
+        start: {Task, :start_link, [__MODULE__, :child_1, []]},
+        type: :worker,
+        restart: :transient,
+      },
+      %{
+        id: :task_group,
         start: {__MODULE__, :run_all_tasks, []},
         type: :supervisor,
         restart: :permanent,
       },
       %{
-        id: :child_3,
-        start: {Task, :start_link, [__MODULE__, :child_3, []]},
+        id: :child_4,
+        start: {Task, :start_link, [__MODULE__, :child_4, []]},
         type: :worker,
         restart: :transient,
       },
@@ -40,13 +46,18 @@ defmodule SupervisionTest.Application do
   end
 
   def child_3() do
+    :timer.sleep(3000)
     IO.puts("Completed 3")
+  end
+
+  def child_4() do
+    IO.puts("Completed 4")
   end
 
   def run_all_tasks() do
     {:ok, pid} = Task.Supervisor.start_link()
 
-    [:child_1, :child_2]
+    [:child_2, :child_3]
       |> Enum.map(&Task.Supervisor.async(pid, __MODULE__, &1, []))
       |> Enum.each(&Task.await/1)
 
